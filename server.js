@@ -101,6 +101,11 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
     console.log("📩 Datos recibidos:", req.body);
     console.log("🧑 Usuario ID:", req.userId);
 
+    // Validar que todos los campos existan
+    if (!score || !level || !recommendation) {
+      return res.status(400).json({ message: 'Faltan datos para guardar el resultado' });
+    }
+
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
@@ -108,9 +113,15 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Ya has completado la encuesta una vez.' });
     }
 
-    const result = new Result({ userId: req.userId, score, level, recommendation });
-    await result.save();
-    console.log("✅ Result guardado:", result);
+    const result = new Result({
+      userId: req.userId,
+      score,
+      level,
+      recommendation
+    });
+
+    const saved = await result.save();
+    console.log("✅ Result guardado:", saved);
 
     user.hasCompletedSurvey = true;
     await user.save();
@@ -118,7 +129,7 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
 
     res.json({ message: 'Encuesta registrada exitosamente.' });
   } catch (err) {
-    console.error("❌ Error al guardar encuesta:", err.message);
+    console.error("❌ Error al guardar encuesta:", err);
     res.status(500).json({ message: 'Error al registrar la encuesta', error: err.message });
   }
 });
@@ -145,6 +156,7 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+
 
 
 
