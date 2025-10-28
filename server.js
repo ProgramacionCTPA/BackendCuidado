@@ -37,22 +37,33 @@ function verifyToken(req, res, next) {
   }
 }
 
-// Registro
 app.post('/api/register', async (req, res) => {
   try {
     const { username, email, password, birthdate } = req.body;
+
+    console.log("📩 Datos recibidos:", req.body); // 👈 Verifica qué llega
+
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'El correo ya está registrado' });
+    if (existing) {
+      console.log("⚠️ Usuario ya existe:", email);
+      return res.status(400).json({ message: 'El correo ya está registrado' });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
+    console.log("🔐 Contraseña encriptada");
+
     const newUser = new User({ username, email, password: hashed, birthdate });
     await newUser.save();
 
+    console.log("✅ Usuario guardado:", newUser._id);
     res.json({ message: 'Registro exitoso. Ya puedes iniciar sesión.' });
   } catch (err) {
-    res.status(500).json({ message: 'Error al registrar usuario', err });
+    console.error("❌ Error en /api/register:", err.message);
+    console.error(err.stack);
+    res.status(500).json({ message: 'Error al registrar usuario', error: err.message });
   }
 });
+
 
 // Login
 app.post('/api/login', async (req, res) => {
@@ -117,4 +128,5 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+
 
