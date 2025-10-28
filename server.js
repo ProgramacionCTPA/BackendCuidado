@@ -18,6 +18,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+console.log("🔍 MONGO_URI:", process.env.MONGO_URI ? "Cargada" : "NO CARGADA");
 
 // Conexión MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -128,5 +129,6 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+
 
 
