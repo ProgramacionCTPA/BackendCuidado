@@ -91,21 +91,34 @@ app.get('/api/survey/status', verifyToken, async (req, res) => {
 
 // Guardar resultado (una sola vez)
 app.post('/api/survey/save', verifyToken, async (req, res) => {
-  const { score, level, recommendation } = req.body;
-  const user = await User.findById(req.userId);
+  try {
+    const { score, level, recommendation } = req.body;
+    console.log("📩 Datos recibidos:", req.body);
+    console.log("🧑 Usuario ID:", req.userId);
 
-  if (user.hasCompletedSurvey) {
-    return res.status(400).json({ message: 'Ya has completado la encuesta una vez.' });
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    if (user.hasCompletedSurvey) {
+      return res.status(400).json({ message: 'Ya has completado la encuesta una vez.' });
+    }
+
+    const result = new Result({ userId: req.userId, score, level, recommendation });
+    await result.save();
+    console.log("✅ Result guardado:", result);
+
+    user.hasCompletedSurvey = true;
+    await user.save();
+    console.log("✅ Usuario actualizado con hasCompletedSurvey = true");
+
+    res.json({ message: 'Encuesta registrada exitosamente.' });
+  } catch (err) {
+    console.error("❌ Error al guardar encuesta:", err);
+    res.status(500).json({ message: 'Error al registrar la encuesta', error: err.message });
   }
-
-  const result = new Result({ userId: req.userId, score, level, recommendation });
-  await result.save();
-
-  user.hasCompletedSurvey = true;
-  await user.save();
-
-  res.json({ message: 'Encuesta registrada exitosamente.' });
 });
+
+
 
 // Obtener estadísticas globales (nivel vs edad)
 app.get('/api/stats', verifyToken, async (req, res) => {
@@ -129,6 +142,7 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+
 
 
 
