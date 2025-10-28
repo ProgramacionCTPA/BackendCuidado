@@ -25,18 +25,24 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
   .then(() => console.log(" Conectado a MongoDB"))
   .catch(err => console.error(" Error al conectar:", err));
 
-// Middleware de autenticación
 function verifyToken(req, res, next) {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ message: 'Token no proporcionado' });
+
+  // Extraer token después de "Bearer "
+  const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
+    console.log("✅ Token válido. userId:", req.userId);
     next();
   } catch (error) {
+    console.error("❌ Token inválido:", error.message);
     return res.status(401).json({ message: 'Token inválido' });
   }
 }
+
 
 app.post('/api/register', async (req, res) => {
   try {
@@ -89,7 +95,6 @@ app.get('/api/survey/status', verifyToken, async (req, res) => {
   res.json({ hasCompletedSurvey: user.hasCompletedSurvey });
 });
 
-// Guardar resultado (una sola vez)
 app.post('/api/survey/save', verifyToken, async (req, res) => {
   try {
     const { score, level, recommendation } = req.body;
@@ -113,12 +118,10 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
 
     res.json({ message: 'Encuesta registrada exitosamente.' });
   } catch (err) {
-    console.error("❌ Error al guardar encuesta:", err);
+    console.error("❌ Error al guardar encuesta:", err.message);
     res.status(500).json({ message: 'Error al registrar la encuesta', error: err.message });
   }
 });
-
-
 
 // Obtener estadísticas globales (nivel vs edad)
 app.get('/api/stats', verifyToken, async (req, res) => {
@@ -142,6 +145,7 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+
 
 
 
