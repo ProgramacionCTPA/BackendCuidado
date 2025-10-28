@@ -44,6 +44,7 @@ function verifyToken(req, res, next) {
 }
 
 
+
 app.post('/api/register', async (req, res) => {
   try {
     const { username, email, password, birthdate } = req.body;
@@ -98,14 +99,16 @@ app.get('/api/survey/status', verifyToken, async (req, res) => {
 app.post('/api/survey/save', verifyToken, async (req, res) => {
   try {
     const { score, level, recommendation } = req.body;
+
     console.log("📩 Datos recibidos:", req.body);
     console.log("🧑 Usuario ID:", req.userId);
 
-    // Validar que todos los campos existan
+    // Validación de datos
     if (!score || !level || !recommendation) {
-      return res.status(400).json({ message: 'Faltan datos para guardar el resultado' });
+      return res.status(400).json({ message: 'Faltan datos para guardar la encuesta' });
     }
 
+    // Buscar usuario
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
@@ -113,6 +116,7 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Ya has completado la encuesta una vez.' });
     }
 
+    // Guardar resultado
     const result = new Result({
       userId: req.userId,
       score,
@@ -123,16 +127,18 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
     const saved = await result.save();
     console.log("✅ Result guardado:", saved);
 
+    // Actualizar usuario
     user.hasCompletedSurvey = true;
     await user.save();
     console.log("✅ Usuario actualizado con hasCompletedSurvey = true");
 
-    res.json({ message: 'Encuesta registrada exitosamente.' });
+    res.json({ message: 'Encuesta registrada exitosamente.', result: saved });
   } catch (err) {
     console.error("❌ Error al guardar encuesta:", err);
     res.status(500).json({ message: 'Error al registrar la encuesta', error: err.message });
   }
 });
+
 
 // Obtener estadísticas globales (nivel vs edad)
 app.get('/api/stats', verifyToken, async (req, res) => {
@@ -156,6 +162,7 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+
 
 
 
