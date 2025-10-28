@@ -18,7 +18,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-console.log("🔍 MONGO_URI:", process.env.MONGO_URI ? "Cargada" : "NO CARGADA");
+//console.log("MONGO_URI:", process.env.MONGO_URI ? "Cargada" : "NO CARGADA");
 
 // Conexión MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -35,21 +35,18 @@ function verifyToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
-    console.log("✅ Token válido. userId:", req.userId);
+    console.log("Token válido. userId:", req.userId);
     next();
   } catch (error) {
-    console.error("❌ Token inválido:", error.message);
+    console.error("Token inválido:", error.message);
     return res.status(401).json({ message: 'Token inválido' });
   }
 }
 
-
-
 app.post('/api/register', async (req, res) => {
   try {
     const { username, email, password, birthdate } = req.body;
-
-    console.log(" Datos recibidos:", req.body); 
+    //console.log(" Datos recibidos:", req.body); 
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -58,12 +55,12 @@ app.post('/api/register', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    console.log("Contraseña encriptada");
+    //console.log("Contraseña encriptada");
 
     const newUser = new User({ username, email, password: hashed, birthdate });
     await newUser.save();
 
-    console.log("Usuario guardado:", newUser._id);
+    //console.log("Usuario guardado:", newUser._id);
     res.json({ message: 'Registro exitoso. Ya puedes iniciar sesión.' });
   } catch (err) {
     console.error("Error en /api/register:", err.message);
@@ -71,7 +68,6 @@ app.post('/api/register', async (req, res) => {
     res.status(500).json({ message: 'Error al registrar usuario', error: err.message });
   }
 });
-
 
 // Login
 app.post('/api/login', async (req, res) => {
@@ -100,8 +96,8 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
   try {
     const { score, level, recommendation } = req.body;
 
-    console.log("📩 Datos recibidos:", req.body);
-    console.log("🧑 Usuario ID:", req.userId);
+    //console.log(" Datos recibidos:", req.body);
+   // console.log(" Usuario ID:", req.userId);
 
     // Validación de datos
     if (!score || !level || !recommendation) {
@@ -125,20 +121,19 @@ app.post('/api/survey/save', verifyToken, async (req, res) => {
     });
 
     const saved = await result.save();
-    console.log("✅ Result guardado:", saved);
+    console.log("Result guardado:", saved);
 
     // Actualizar usuario
     user.hasCompletedSurvey = true;
     await user.save();
-    console.log("✅ Usuario actualizado con hasCompletedSurvey = true");
+    console.log("Usuario actualizado con hasCompletedSurvey = true");
 
     res.json({ message: 'Encuesta registrada exitosamente.', result: saved });
   } catch (err) {
-    console.error("❌ Error al guardar encuesta:", err);
+    console.error("Error al guardar encuesta:", err);
     res.status(500).json({ message: 'Error al registrar la encuesta', error: err.message });
   }
 });
-
 
 // Obtener estadísticas globales (nivel vs edad)
 app.get('/api/stats', verifyToken, async (req, res) => {
@@ -159,13 +154,5 @@ app.get('/api/stats', verifyToken, async (req, res) => {
   }
 });
 
-
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
-
-
-
-
-
-
-
