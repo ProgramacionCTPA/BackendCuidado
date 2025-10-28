@@ -21,8 +21,8 @@ app.use(express.json());
 
 // Conexión MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ Conectado a MongoDB"))
-  .catch(err => console.error("❌ Error al conectar:", err));
+  .then(() => console.log(" Conectado a MongoDB"))
+  .catch(err => console.error(" Error al conectar:", err));
 
 // Middleware de autenticación
 function verifyToken(req, res, next) {
@@ -41,24 +41,24 @@ app.post('/api/register', async (req, res) => {
   try {
     const { username, email, password, birthdate } = req.body;
 
-    console.log("📩 Datos recibidos:", req.body); // 👈 Verifica qué llega
+    console.log(" Datos recibidos:", req.body); 
 
     const existing = await User.findOne({ email });
     if (existing) {
-      console.log("⚠️ Usuario ya existe:", email);
+      console.log("Usuario ya existe:", email);
       return res.status(400).json({ message: 'El correo ya está registrado' });
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    console.log("🔐 Contraseña encriptada");
+    console.log("Contraseña encriptada");
 
     const newUser = new User({ username, email, password: hashed, birthdate });
     await newUser.save();
 
-    console.log("✅ Usuario guardado:", newUser._id);
+    console.log("Usuario guardado:", newUser._id);
     res.json({ message: 'Registro exitoso. Ya puedes iniciar sesión.' });
   } catch (err) {
-    console.error("❌ Error en /api/register:", err.message);
+    console.error("Error en /api/register:", err.message);
     console.error(err.stack);
     res.status(500).json({ message: 'Error al registrar usuario', error: err.message });
   }
@@ -127,7 +127,6 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
-
+app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
 
 
