@@ -9,7 +9,14 @@ const User = require('./models/User');
 const Result = require('./models/Result');
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: "https://autocuidado-personal.netlify.app", // tu dominio frontend
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Conexión MongoDB
@@ -110,3 +117,4 @@ app.get('/api/stats', verifyToken, async (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+
